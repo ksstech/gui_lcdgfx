@@ -3,6 +3,8 @@
  * Copyright (c) 2014-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
+#include "main.h"
+#if (cmakeGUI == 1)
 #include "gui_lcdgfx.h"
 #include "lcdgfx.h"
 
@@ -35,9 +37,8 @@
 #define	ili9341GPIO_LIGHT			GPIO_NUM_5
 #define ili9341GPIO_CS				GPIO_NUM_22
 
-#define	ili9341BACKLIGHT			1		//0=disable 1=PWM 2=ONOFF
 #define guiBUF_SIZE					(40 * 25)
-#define guiOPTION					1
+#define guiOPTION					1					// 1= CANVAS, rest = DISPLAY
 
 //		ESP32-WROVER-KIT			  Rst busId  cs 	dc	freq	 scl  sda
 DisplayILI9341_240x320x16_SPI display (
@@ -61,22 +62,8 @@ static u8_t Page = 0, Level = 0;
 
 // ###################################### Backlight support ########################################
 
-void vGUI_BackLightStatus(bool Status) {
-    gpio_set_direction(ili9341GPIO_LIGHT, GPIO_MODE_OUTPUT) ;
-    gpio_set_level(ili9341GPIO_LIGHT, !Status) ;
-}
-
-void vGUI_BackLightSetLevel(void) {
-	Level %= 100;
-	ili9341BacklightLevel(Level += 5);
-}
-
 void vGUI_Init(void) {
-	#if (ili9341BACKLIGHT == 1)
 	ili9341BacklightInit();
-	#elif (ili9341BACKLIGHT == 2))
-	vTaskGUI_BackLightStatus(1) ;
-	#endif
 
 	display.begin();
 	display.clear();
@@ -114,9 +101,7 @@ void vGUI_Update(void) {
 		iRV += xBitMapDecodeChanges(SFprv, SFcur, 0x00000003, SFnames, bmdcNEWLINE, Buffer+iRV, guiBUF_SIZE-iRV);
 		SFprv = SFcur;
 		iRV += snprintfx(Buffer+iRV, guiBUF_SIZE-iRV, "%!R  %Z\r\n", RunTime, &sTSZ);
-		#if (ili9341BACKLIGHT == 1)
 		iRV += snprintfx(Buffer+iRV, guiBUF_SIZE-iRV, "Level=%u\r\n", Level);
-		#endif
 		break;
 	case 2:
 		sFM.u32Val = makeMASK11x21(0,1,1,1,1,1,1,1,1,1,1,0);
@@ -154,9 +139,8 @@ static void vTaskGUI(void * pVoid) {
 	xRtosSetStateRUN(taskGUI_MASK);
 
     while(bRtosVerifyState(taskGUI_MASK)) {
-		#if (ili9341BACKLIGHT == 1)
-    	vGUI_BackLightSetLevel();
-		#endif
+    	Level %= 100;
+    	ili9341BacklightLevel(Level += 5);
     	vGUI_Update();
         vTaskDelay(pdMS_TO_TICKS((ioB4GET(ioGUIintval)+1) * MILLIS_IN_SECOND));
     }
@@ -171,3 +155,4 @@ StackType_t tsbGUI[guiSTACK_SIZE] = { 0 };
 extern "C" void vTaskGUI_Init(void * pvPara) {
 	xRtosTaskCreateStatic(vTaskGUI, "gui", guiSTACK_SIZE, pvPara, guiPRIORITY, tsbGUI, &ttsGUI, tskNO_AFFINITY);
 }
+#endif

@@ -3,6 +3,8 @@
  * Copyright (c) 2014-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
+#include "main.h"
+#if (cmakeGUI == 1)
 #include "gui_lcdgfx.h"
 #include "lcdgfx.h"
 
@@ -214,3 +216,4 @@ void	vTaskLCDGFX(void * pVoid) {
     }
 	vRtosTaskDelete(NULL) ;
 }
+#endif
