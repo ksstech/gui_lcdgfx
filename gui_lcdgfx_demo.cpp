@@ -3,8 +3,7 @@
  * Copyright (c) 2014-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
-#include "main.h"
-#if (cmakeGUI == 1)
+#if (cmakeGUI == 2)
 #include "gui_lcdgfx.h"
 #include "lcdgfx.h"
 
